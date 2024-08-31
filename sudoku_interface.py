@@ -1,4 +1,5 @@
 from tkinter import *
+from sudoku_cell import SudokuCell
 
 BLOCK_HEIGHT=141
 BLOCK_WIDTH=147
@@ -72,10 +73,12 @@ class SudokuInterface:
                     for col in range(3):
                         position=(5+x+w,10+y+h)
                         self.position_of_buttons[block_no][row].append(position)
-                        self.button=Button(image=self.white_background,command=lambda r=row, c=col, b=block_no, p=position: self.button_click(r,c,b,p),width=CELL_WIDTH,height=CELL_HEIGHT)
-                        # self.button=Button(bg="white", activebackground="white",command=lambda r=row, c=col, b=block_no, p=position: self.button_click(r,c,b,p),width=CELL_WIDTH,height=CELL_HEIGHT)
-                        self.all_buttons[block_no][row].append(self.button)
-                        self.button_canvas=self.sudoku_canvas_display.create_window(position,anchor="nw",window=self.button)
+                        # self.button=Button(image=self.white_background,command=lambda r=row, c=col, b=block_no, p=position: self.button_click(r,c,b,p),width=CELL_WIDTH,height=CELL_HEIGHT)
+                        # # self.button=Button(bg="white", activebackground="white",command=lambda r=row, c=col, b=block_no, p=position: self.button_click(r,c,b,p),width=CELL_WIDTH,height=CELL_HEIGHT)
+                        new_cell=SudokuCell(block_no=block_no,row=row,col=col,command=self.button_click,position=position)
+                        new_cell.button.config(image=self.white_background)
+                        self.all_buttons[block_no][row].append(new_cell)
+                        self.button_canvas=self.sudoku_canvas_display.create_window(position,anchor="nw",window=new_cell.button)
                         x+=X_SHIFT
                     y+=Y_SHIFT
                 block_no+=1
@@ -87,7 +90,7 @@ class SudokuInterface:
         self.number_buttons=[]
         x=0
         for num in range(1,10):
-            self.button=Button(text=num,command=lambda n=num:self.display_number(n),padx=10,pady=10,font=NUMBER_FONT)
+            self.button=Button(text=num,command=lambda n=num:self.replace_with_number(n),padx=10,pady=10,font=NUMBER_FONT)
             self.number_buttons.append(self.button)
             self.number_canvas=self.number_display.create_window(5+x,0,window=self.button)
             x+=48
@@ -99,34 +102,49 @@ class SudokuInterface:
 
     def button_click(self, r, c, b,p):
         print(f"block {b}, row {r}, column {c} at position {p}")
-        if check_button_image(self.all_buttons[b][r][c],self.white_background):
+        if check_button_image(self.all_buttons[b][r][c].button,self.white_background):
             if self.is_sudoku_button_clicked:
                 self.turn_all_display_buttons_white()
-                self.all_buttons[b][r][c].config(image=self.green_background)
+                self.all_buttons[b][r][c].button.config(image=self.green_background)
                 self.selected_button=self.all_buttons[b][r][c]
             else:
-                self.all_buttons[b][r][c].config(image=self.green_background)
+                self.all_buttons[b][r][c].button.config(image=self.green_background)
                 self.is_sudoku_button_clicked=True
                 self.selected_button=self.all_buttons[b][r][c]
         else:
-            self.all_buttons[b][r][c].config(image=self.white_background)
+            self.all_buttons[b][r][c].button.config(image=self.white_background)
             self.selected_button=None
+        print(f"{self.selected_button}")
             
     #going to act like a submit button
-    def display_number(self,num):
+    def replace_with_number(self, num):
         print(f"number is {num}")
-        
+        if self.is_sudoku_button_clicked and self.selected_button:
+            # Clear the button image and set the text
+            cell = self.all_buttons[self.selected_button.block][self.selected_button.row][self.selected_button.column]
+            cell.button.destroy()
+            cell.change_to_number(num)
+            self.button_canvas=self.sudoku_canvas_display.create_window(cell.position[0]+13,cell.position[1]+5,anchor="nw",window=cell.text)
 
+            # # Ensure consistent size
+            # cell.config(width=CELL_WIDTH, height=CELL_HEIGHT)         
 
-#TODO remove this function      
-    def turn_all_number_buttons_white(self):
-        for button in self.number_buttons:
-            button.configure(bg="white")
+            # # Reset the button state
+            # self.is_sudoku_button_clicked = False
+            # self.selected_button = None
+
+            # # Force update of the GUI (if needed)
+            # self.window.update_idletasks()
+            
+                
 
     def turn_all_display_buttons_white(self):
         for block in self.all_buttons:
             for row in block:
-                for button in row:
-                    button.config(image=self.white_background)
+                for cell in row:
+                    try:
+                        cell.button.config(image=self.white_background)
+                    except:
+                        pass
  
 s=SudokuInterface()
