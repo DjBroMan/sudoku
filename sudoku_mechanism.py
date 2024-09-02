@@ -1,38 +1,19 @@
+from helpful_functions import *
 import copy
+from random import randint, shuffle
 
 #the print statements are used for debugging
 #to play another sudoku change the question no
 
 QUESTION_NO=1
 
-def has_duplicates(vec):
-    seen = set()
-    for num in vec:
-        if num != 0:
-            if num in seen:
-                return True  # Duplicate found
-            seen.add(num)
-    return False  # No duplicates
 
-#For debuging
-def display(vec):
-    print("\n===========================================================")
-    # no_of_blank = 0
-    for l in range(0, 9, 3):
-        for k in range(3):
-            for j in range(3):
-                for i in range(3):
-                    if vec[j + l][k][i] != 0:
-                        print(vec[j + l][k][i], end=' ')
-                    else:
-                        print("_", end=' ')
-                print("  ", end='')
-            print()  # Move to the next line after a group of 3x3 blocks
-        print()  # Add an extra line after each block of 3 rows
-    # return no_of_blank
 
 class SudokuMechanism:
     def __init__(self) -> None:
+        """
+        Initialize the SudokuMechanism with empty grids for sudoku, copy_sudoku, and ans_sudoku.
+        """
         #              row                    column                 block
         self.sudoku=[[[0 for _ in range(3)] for _ in range(3)] for _ in range(9)]
         #                    row                    column                 block
@@ -40,7 +21,10 @@ class SudokuMechanism:
         #                    row                    column                 block
         self.ans_sudoku=[[[0 for _ in range(3)] for _ in range(3)] for _ in range(9)]
     
-    def set_data(self):
+    def set_data(self) -> None:
+        """
+        Set the Sudoku puzzle and its solution from files.
+        """
         with open(f"Sudoku question/question_{QUESTION_NO}/question.txt") as question:
             for coef in range(3):
                 l=3*coef
@@ -63,99 +47,115 @@ class SudokuMechanism:
                         for k in range(3):
                             self.ans_sudoku[j+l][i][k]=int(data[j][k])
                 trash=question.readline()
+
     
-    def get_no_of_blanks(self):
-        blanks=0
-        for b in range(9):
-            for r in range(3):
-                for c in range(3):
-                    if self.sudoku[b][r][c]==0:
-                        blanks+=1
-        return blanks
+    def generate_complete_sudoku(self) -> None:
+        """
+        Generate a complete Sudoku puzzle and save the solution.
+        """
+        # Start the backtracking process
+        self.fill_grid(0, 0)
+        self.ans_sudoku = copy.deepcopy(self.sudoku)  # Save the solution
+        
+    def fill_grid(self, row: int, col: int) -> bool:
+        """
+        Fill the Sudoku grid using a backtracking algorithm.
 
-    def is_repetition(self):
-        if self.block_repetition():
-            print("Repetition in the block")
-            print("copy sudoku-")
-            display(self.copy_sudoku)
-            return True
-        elif self.row_repetition():
-            print("Repetition in the row")
-            return True
-        elif self.column_repetition():
-            print("Repetition in the column")
-            return True
-        else:
-            return False
-
-    def block_repetition(self):
-        check = 1
-        for i in range(9):
-            vec = []
-            for j in range(3):
-                for k in range(3):
-                    vec.append(self.copy_sudoku[i][j][k])
-            if has_duplicates(vec):
-                # print(f"Repetition in the block {check}")
+        :param row: The current row to fill.
+        :param col: The current column to fill.
+        :return: True if the grid was successfully filled, False otherwise.
+        """
+        # Move to the next row if we reached the end of the current row
+        if col == 9:
+            col = 0
+            row += 1
+            # If we filled all rows, we are done
+            if row == 9:
                 return True
-            else:
-                check += 1
-        # print("No repetition in blocks")
-        return False
-
-    def row_repetition(self):
-        check = 1
-        for h in range(0, 9, 3):
-            for i in range(3):
-                vec = []
-                for j in range(3):
-                    for k in range(3):
-                        vec.append(self.copy_sudoku[j + h][i][k])
-                if has_duplicates(vec):
-                    # print(f"Repetition in the row {check}")
+        
+        # Try to fill the current cell
+        numbers = list(range(1, 10))
+        shuffle(numbers)  # Randomly shuffle numbers to try different combinations
+        
+        for num in numbers:
+            if self.is_safe(num, row, col):
+                # Place the number and move to the next cell
+                block = (row // 3) * 3 + (col // 3)
+                block_row = row % 3
+                block_col = col % 3
+                self.sudoku[block][block_row][block_col] = num
+                
+                if self.fill_grid(row, col + 1):
                     return True
-                else:
-                    check += 1
-        # print("No repetition in rows")
+                
+                # If no valid number was found, reset the cell
+                self.sudoku[block][block_row][block_col] = 0
+        
         return False
 
-    def column_repetition(self):
-        check = 1
-        for j in range(3):
-            for i in range(3):
-                vec = []
-                for h in range(0, 9, 3):
-                    for k in range(3):
-                        vec.append(self.copy_sudoku[h + j][k][i])
-                if has_duplicates(vec):
-                    # print(f"Repetition in the column {check}")
-                    return True
-                else:
-                    check += 1
-        # print("No repetition in columns")
-        return False
+    def is_safe(self, num: int, row: int, col: int) -> bool:
+        """
+        Check if a number can be safely placed in the specified cell.
 
-    def compare_with_answer(self):
-        print("copy sudoku-")
-        display(self.copy_sudoku)
+        :param num: The number to check.
+        :param row: The row index of the cell.
+        :param col: The column index of the cell.
+        :return: True if the number is safe to place, False otherwise.
+        """
+        # Check if num is not present in the current row, column, or block
+        block = (row // 3) * 3 + (col // 3)
+        block_row = row % 3
+        block_col = col % 3
+        
+        # Temporarily place the number in the cell
+        self.sudoku[block][block_row][block_col] = num
+        
+        # Check for repetition using the provided functions
+        if is_repetition(self.sudoku):
+            self.sudoku[block][block_row][block_col] = 0
+            return False
+        
+        # No repetition found, the number is safe to place
+        self.sudoku[block][block_row][block_col] = 0
+        return True
+
+
+    
+    def compare_with_answer(self) -> bool:
+        """
+        Compare the current Sudoku puzzle with the solution to check if it's correct.
+
+        :return: True if the current puzzle matches the solution, False otherwise.
+        """
+        # print("copy sudoku-")
+        # display(self.copy_sudoku)
         for i in range(9):
             for j in range(3):
                 for k in range(3):
-                    temp = self.sudoku[i][j][k]
+                    temp = self.copy_sudoku[i][j][k]
                     if temp != 0:
+                        # print(f"temp- {temp}") 
                         if self.ans_sudoku[i][j][k] != temp:
-                            print("Wrong answer")
-                            print(f"temp- {temp}") 
-                            print(f"ans- {self.ans_sudoku[i][j][k]}")
+                            # print("Wrong answer")
+                            # print(f"ans- {self.ans_sudoku[i][j][k]}")
                             return False
-        print(f"temp- {temp}") 
-        print(f"ans- {self.ans_sudoku[i][j][k]}")
+        # print(f"temp- {temp}") 
+        # print(f"ans- {self.ans_sudoku[i][j][k]}")
         return True
     
-    def add_number(self,num,block,row,col):
+    def add_number(self, num: int, block: int, row: int, col: int) -> bool:
+        """
+        Add a number to the Sudoku grid and check if the current state is valid.
+
+        :param num: The number to add.
+        :param block: The block index of the cell.
+        :param row: The row index of the cell.
+        :param col: The column index of the cell.
+        :return: True if the number was added successfully and the state is valid, False otherwise.
+        """
         self.copy_sudoku[block][row][col]=num
-        print("in add number")
-        if self.is_repetition():
+        # print("in add number")
+        if is_repetition(self.copy_sudoku):
             self.copy_sudoku=copy.deepcopy(self.sudoku)
             return False
             
