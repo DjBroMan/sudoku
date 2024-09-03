@@ -1,13 +1,13 @@
 from tkinter import *
 from sudoku_cell import SudokuCell
 from sudoku_mechanism import SudokuMechanism
+from helpful_functions import get_no_of_blanks, display
+import copy
 
 BLOCK_HEIGHT=141
 BLOCK_WIDTH=147
 CELL_HEIGHT=38
 CELL_WIDTH=38
-# CELL_HEIGHT=2
-# CELL_WIDTH=2
 X_SHIFT=48
 Y_SHIFT=46
 NUMBER_FONT=("Arial",10)
@@ -30,6 +30,9 @@ def check_button_image(button:Button, image_to_check):
 
 class SudokuInterface:
     def __init__(self) -> None:
+        """
+        Initialize the SudokuInterface, setting up the window, images, and Sudoku grid.
+        """
         #Controls
         self.is_sudoku_button_clicked=False
         self.selected_button=None
@@ -76,8 +79,6 @@ class SudokuInterface:
                     for col in range(3):
                         position=(5+x+w,10+y+h)
                         self.position_of_buttons[block_no][row].append(position)
-                        # self.button=Button(image=self.white_background,command=lambda r=row, c=col, b=block_no, p=position: self.button_click(r,c,b,p),width=CELL_WIDTH,height=CELL_HEIGHT)
-                        # # self.button=Button(bg="white", activebackground="white",command=lambda r=row, c=col, b=block_no, p=position: self.button_click(r,c,b,p),width=CELL_WIDTH,height=CELL_HEIGHT)
                         new_cell=SudokuCell(block_no=block_no,row=row,col=col,command=self.button_click,position=position)
                         new_cell.button.config(image=self.white_background)
                         self.all_buttons[block_no][row].append(new_cell)
@@ -89,7 +90,6 @@ class SudokuInterface:
     # Number Display
         self.number_display=Canvas(height=100,width=453)
         self.number_display.place(x=45, y=570)  # Position below the Sudoku canvas
-        # self.number_display.grid(row=1, column=0, padx=20, pady=10,sticky="ew")
         self.number_buttons=[]
         x=0
         for num in range(1,10):
@@ -108,14 +108,21 @@ class SudokuInterface:
                         cell.change_to_number(self.mechanism.sudoku[b][r][c])
                         self.button_canvas=self.sudoku_canvas_display.create_window(cell.position[0]+13,cell.position[1]+5,anchor="nw",window=cell.text)
         
-        self.mechanism.copy_sudoku=self.mechanism.sudoku
+        self.mechanism.copy_sudoku=copy.deepcopy(self.mechanism.sudoku)
 
 
         
         self.window.mainloop()
 
-    def button_click(self, r, c, b,p):
-        # print(f"block {b}, row {r}, column {c} at position {p}")
+    def button_click(self, r: int, c: int, b: int) -> None:
+        """
+        Handle the event when a Sudoku cell button is clicked.
+
+        :param r: The row index of the clicked cell.
+        :param c: The column index of the clicked cell.
+        :param b: The block index of the clicked cell.
+        """
+        # print(f"block {b}, row {r}, column {c}")
         if check_button_image(self.all_buttons[b][r][c].button,self.white_background):
             if self.is_sudoku_button_clicked:
                 self.turn_all_display_buttons_white()
@@ -131,16 +138,23 @@ class SudokuInterface:
         # print(f"{self.selected_button}")
             
     #going to act like a submit button
-    def replace_with_number(self, num):
+    def replace_with_number(self, num: int) -> None:
+        """
+        Replace the selected cell with the specified number.
+
+        :param num: The number to place in the selected cell.
+        """
         # print(f"number is {num}")
-        print(self.is_sudoku_button_clicked)
-        print(self.selected_button)
+        # print(self.is_sudoku_button_clicked)
+        # print(self.selected_button)
         if self.is_sudoku_button_clicked and self.selected_button:
             b=self.selected_button.block
             r=self.selected_button.row
             c=self.selected_button.column
             # print("a")
             if self.mechanism.add_number(num,b,r,c):
+                # display(self.mechanism.ans_sudoku)
+                # display(self.mechanism.sudoku)
                 cell = self.all_buttons[b][r][c]
                 cell.button.destroy()
                 cell.change_to_number(num)
@@ -153,7 +167,10 @@ class SudokuInterface:
                 self.selected_button=None
                 # print("c")               
 
-    def turn_all_display_buttons_white(self):
+    def turn_all_display_buttons_white(self) -> None:
+        """
+        Reset the image of all Sudoku cell buttons to the white background.
+        """
         for block in self.all_buttons:
             for row in block:
                 for cell in row:
@@ -162,9 +179,9 @@ class SudokuInterface:
                     except:
                         pass
 
-    def check_game_end(self):
-        if self.mechanism.get_no_of_blanks()==0:
+    def check_game_end(self) -> None:
+        """
+        Check if the Sudoku game has ended (i.e., no blanks are left).
+        """
+        if get_no_of_blanks(self.mechanism.sudoku)==0:
             print("Game End")
-
-
-

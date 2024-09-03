@@ -14,6 +14,7 @@ Icon
 
 #My personal testcode file
 testcode.py
+testcode2.py
 data management.py
 
 # People have already very handy .gitignore templates for Python projects.
