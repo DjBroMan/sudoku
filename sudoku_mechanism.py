@@ -5,7 +5,8 @@ from random import randint, shuffle
 #the print statements are used for debugging
 #to play another sudoku change the question no
 
-QUESTION_NO=1
+QUESTION_NO=6
+NO_TO_SHOW=30
 
 
 
@@ -48,7 +49,6 @@ class SudokuMechanism:
                             self.ans_sudoku[j+l][i][k]=int(data[j][k])
                 trash=question.readline()
 
-    
     def generate_complete_sudoku(self) -> None:
         """
         Generate a complete Sudoku puzzle and save the solution.
@@ -118,9 +118,7 @@ class SudokuMechanism:
         # No repetition found, the number is safe to place
         self.sudoku[block][block_row][block_col] = 0
         return True
-
-
-    
+  
     def compare_with_answer(self) -> bool:
         """
         Compare the current Sudoku puzzle with the solution to check if it's correct.
@@ -166,3 +164,22 @@ class SudokuMechanism:
             else:
                 self.copy_sudoku=copy.deepcopy(self.sudoku)
                 return False
+    
+    def generate_question(self):
+        self.copy_sudoku=deepcopy(self.sudoku)
+        count=81-NO_TO_SHOW
+        while count>0:
+            b=randint(0,8)
+            r=randint(0,2)
+            c=randint(0,2)
+            if self.copy_sudoku[b][r][c] != 0:
+                self.copy_sudoku[b][r][c]=0
+                temp=solve_sudoku(self.copy_sudoku)
+                if temp==self.ans_sudoku:
+                    display(self.copy_sudoku)
+                    count-=1
+                else:
+                    self.copy_sudoku[b][r][c]=self.sudoku[b][r][c]
+        self.sudoku=deepcopy(self.copy_sudoku)
+
+

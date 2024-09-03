@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 def has_duplicates(vec: list) -> bool:
     """
     Check if there are duplicate non-zero values in a list.
@@ -149,3 +151,35 @@ def check_valid(arr: list, block: int, row: int, column: int) -> bool:
     if arr[block][row][column]==0:
         return True
     return False
+
+
+def solve_sudoku(arr):
+    arr_copy = deepcopy(arr)
+    
+    # Iterate through all blocks, rows, and columns
+    for block in range(9):
+        for row in range(3):
+            for column in range(3):
+                if arr_copy[block][row][column] == 0:  # Find an empty spot
+                    # Try numbers 1-9
+                    for number in range(1, 10):
+                        arr_copy[block][row][column] = number
+                        
+                        # Check if placing the number causes any repetition
+                        if not is_repetition(arr_copy):
+                            # Recursively attempt to solve with this new configuration
+                            result = solve_sudoku(arr_copy)
+                            if result:  # If the result is a valid solution, return it
+                                return result
+                        
+                        # Backtrack by resetting the cell
+                        arr_copy[block][row][column] = 0
+
+                    # If no valid number could be placed, return False for backtracking
+                    return False
+
+    # If no blanks are left, a solution has been found
+    if get_no_of_blanks(arr_copy) == 0:
+        return arr_copy
+    
+    return False  # No solution found

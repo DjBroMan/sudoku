@@ -90,7 +90,6 @@ class SudokuInterface:
     # Number Display
         self.number_display=Canvas(height=100,width=453)
         self.number_display.place(x=45, y=570)  # Position below the Sudoku canvas
-        self.number_display.grid(row=1, column=0, padx=20, pady=10,sticky="ew")
         self.number_buttons=[]
         x=0
         for num in range(1,10):
