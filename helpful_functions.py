@@ -152,8 +152,8 @@ def check_valid(arr: list, block: int, row: int, column: int) -> bool:
         return True
     return False
 
-
 def solve_sudoku(arr):
+    
     arr_copy = deepcopy(arr)
     
     # Iterate through all blocks, rows, and columns
